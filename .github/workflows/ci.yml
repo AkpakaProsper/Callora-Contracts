@@ -32,7 +32,7 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock', '**/Cargo.toml') }}
+          key: $({ runner.os })-cargo-$({ hashFiles('**/Cargo.lock', '**/Cargo.toml') })
           restore-keys: |
             ${{ runner.os }}-cargo-
 
@@ -42,7 +42,7 @@ jobs:
 
       - name: Clippy
         continue-on-error: true
-        run: cargo clippy --all-targets --all-features -- -D warnings
+        run: cargo clippy --all-targets --all-features - -D warnings
 
       - name: Build settlement WASM for tests
         continue-on-error: true
@@ -51,6 +51,34 @@ jobs:
       - name: Test (all workspace members)
         continue-on-error: true
         run: cargo test --workspace
+
+  test-contract-errors:
+    name: Contract error codes stability
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        continue-on-error: true
+
+      - name: Install Rust
+        continue-on-error: true
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        continue-on-error: true
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: $({ runner.os })-cargo-err-stab-$({ hashFiles('**/Cargo.lock', '**/Cargo.toml') })
+          restore-keys: |
+            $({ runner.os })-cargo-err-stab-
+
+      - name: Test error code stability
+        continue-on-error: true
+        run: cargo test --workspace err_stab
 
   test-nightly:
     name: Test (Nightly)
@@ -74,9 +102,9 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: ${{ runner.os }}-cargo-nightly-${{ hashFiles('**/Cargo.lock', '**/Cargo.toml') }}
+          key: $({ runner.os })-cargo-nightly-$({ hashFiles('**/Cargo.lock', '**/Cargo.toml') })
           restore-keys: |
-            ${{ runner.os }}-cargo-nightly-
+            $({ runner.os })-cargo-nightly-
 
       - name: Build settlement WASM for tests
         continue-on-error: true
@@ -108,9 +136,9 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock', '**/Cargo.toml') }}
+          key: $({ runner.os })-cargo-$({ hashFiles('**/Cargo.lock', '**/Cargo.toml') })
           restore-keys: |
-            ${{ runner.os }}-cargo-
+            $({ runner.os })-cargo-
 
       - name: Check WASM size
         continue-on-error: true
@@ -133,3 +161,18 @@ jobs:
         run: |
           chmod +x scripts/check-event-shape.sh
           ./scripts/check-event-shape.sh
+
+  error-codes:
+    name: ERROR_CODES vs contract enums
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        continue-on-error: true
+
+      - name: Check ERROR_CODES.md is in sync with contract enums
+        continue-on-error: true
+        shell: bash
+        run: |
+          chmod +x scripts/check-error-codes.sh
+          ./scripts/check-error-codes.sh

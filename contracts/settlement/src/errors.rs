@@ -50,6 +50,7 @@ use soroban_sdk::contracterror;
 /// | 40   | InvalidVault                 | Vault address is invalid                             |
 /// | 41   | NoVaultRotationPending       | No vault rotation is pending                         |
 /// | 42   | BroadcastMessageTooLong      | Admin broadcast message exceeds the maximum length   |
+/// | 43   | Reserved43                   | Reserved for future use                              |
 #[contracterror]
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(u32)]
@@ -101,4 +102,6 @@ pub enum SettlementError {
     NoVaultRotationPending = 41,
     /// Admin broadcast message exceeds the maximum allowed length.
     BroadcastMessageTooLong = 42,
+    /// Reserved for future use; not currently emitted by the contract.
+    Reserved43 = 43,
 }
