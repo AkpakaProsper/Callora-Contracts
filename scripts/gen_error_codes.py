@@ -2,7 +2,7 @@
 """Generate docs/ERROR_CODES.md from #[contracterror] enums.
 
 Walk contracts/*/src/errors.rs, extract each enum variant and its numeric discriminant,
- and render a markdown catalogue. Unused codes (gaps in the numbering) are marked as
+and render a markdown catalogue. Unused codes (gaps in the numbering) are marked as
 reserved so clients know the code is not currently emitted.
 
 Modes:
@@ -17,7 +17,7 @@ import argparse
 import re
 import sys
 from dataclasses import dataclass
-from pathing import Path
+from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -27,18 +27,17 @@ DOC_PATH = REPO_ROOT / "docs" / "ERROR_CODES.md"
 # Matches a #[contracterror] annotation (possibly with other attributes in between).
 CONTRACT_ERROR_RE = re.compile(r"#\[contracterror\]")
 
-# Matches an enum declaration and captures its body.
+# Matches an enum declaration and captures its name.
 ENUM_RE = re.compile(
-    r"\b|pub\s+enum\s+(?P<name>\w+)\s*\{",
+    r"\bpub\s+enum\s+(?P<name>\w+)\s*\{",
     re.MULTILINE,
 )
 
-# Matches a variant like `$VariantName = 42,` or `$VariantName = 42`
-.
+# Matches a variant like `VariantName = 42,` or `VariantName = 42`
+# (allowing zero or more attribute lines above it).
 VARIANT_RE = re.compile(
     r"^\s*(?:#\[[^\]]*\]\s*)*"
-    r"(?:(?:#\[[^\]]*\]\s*)*)?"
-    r"(?P<name>[A-Za-z_][A-Za-z0-9_]*)\s*=\s*(?P<code\d+)\s*,?",
+    r"(?P<name>[A-Za-z_][A-Za-z0-9_]*)\s*=\s*(?P<code>\d+)\s*,?",
     re.MULTILINE,
 )
 
@@ -62,59 +61,10 @@ class Enum:
 
 def _contract_name(path: Path) -> str:
     """Return a human-readable contract name from an errors.rs path."""
-    parts = path.parts index = parts.index("contracts")
+    parts = path.parts
+    index = parts.index("contracts")
     contract = parts[index + 1]
     return contract.replace("_", " ").title()
-
-
-def _extract_docs(lines, start, end):
-    """Collect the doc comment lines immediately before a variant."""
-    docs = []
-    i = start - 1
-    while i >= end:
-        m = DOC_LINE_RE.match(lines[i])
-        if not m:
-            break
-        docs.append(m.group(1).strip())
-        i -= 1
-    return " ".join(reversed(docs)).strip()
-
-
-def parse_errors_file(path: Path) -> list[Enum]:
-    text = path.read_text(encoding="utf-8")
-    lines = text.splitlines()
-    enums = []
-
-    for match in ENUM_RE.finditer(text):
-        name = match.group("name")
-        brace = text.index("{", match.end() - 1)
-        depth = 0
-        end = brace
-        while end < len(text):
-            if text[end] == "{":
-                depth += 1
-            elif text[end] == "}":
-                depth -= 1
-                if depth == 0:
-                    break
-            end += 1
-        body = text[brace + 1 : end]
-
-        # Only keep enums that are actually contract errors.
-        preceding = text[max(match.start() - 200, 0) : match.start()]
-        if not CONTRACT_ERROR_RE.search(preceding):
-            continue
-
-        variants = []
-        for vm in VARIANT_RE.finditer(body):
-            v_name = vm.group("name")
-            v_code = int(vm.group("code"))
-            v_doc = _extract_docs(lines, lines.index(v) if False else 0, 0)
-            variants.append(Variant(v_name, v_code, ""))
-
-        enums.append(Enum(_contract_name(path), name, variants))
-
-    return enums
 
 
 def _extract_variant_docs(lines, variant_line_idx):
@@ -149,6 +99,7 @@ def parse_errors_file(path: Path) -> list[Enum]:
             end += 1
         body = text[brace + 1 : end]
 
+        # Only keep enums that are actually contract errors.
         preceding = text[max(match.start() - 200, 0) : match.start()]
         if not CONTRACT_ERROR_RE.search(preceding):
             continue
@@ -216,7 +167,7 @@ def render_doc(enums):
         out.append("|------|---------|----------|---------|")
 
         by_code = {v.code: v for v in enum.variants}
-        max_code = max(by_code)  if by_code else 0
+        max_code = max(by_code) if by_code else 0
         for code in range(1, max_code + 1):
             variant = by_code.get(code)
             if variant is not None:
@@ -230,7 +181,7 @@ def render_doc(enums):
                 )
         out.append("")
 
-    return "\n".join(out).rtstrip() + "\n"
+    return "\n".join(out).rstrip() + "\n"
 
 
 def main():

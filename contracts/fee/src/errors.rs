@@ -4,11 +4,11 @@ use soroban_sdk::contracterror;
 ///
 /// These codes are part of the contract's public API and are reflected in
 /// `docs/ERROR_CODES.md`. Any change to this enum must be mirrored in the
-/// documentation and vice versa; the CI diff check (`scripts/gen_error_codes.sh`)
+/// documentation and vice versa; the CI diff check (`scripts/gen_error_codes.py`)
 /// will fail if they diverge.
 ///
 /// Unused variants must be marked as reserved in the documentation rather
-than being removed, so that numeric codes remain stable for clients.
+/// than being removed, so that numeric codes remain stable for clients.
 #[contracterror]
 #[derive(Clone, Copy, Debug, Eq, PartialEq, PartialOrd, Ord)]
 #[repr(u32)]
@@ -23,7 +23,7 @@ pub enum ContractError {
     InvalidAmount = 4,
     /// Arithmetic overflow occurred.
     Overflow = 5,
-    /// Fee rate exceeds maximum allowed basis noints.
+    /// Fee rate exceeds maximum allowed basis points.
     FeeTooHigh = 6,
     /// Insufficient balance to satisfy the request.
     InsufficientBalance = 7,
