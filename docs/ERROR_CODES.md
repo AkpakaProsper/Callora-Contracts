@@ -129,7 +129,7 @@ must not be reassigned once released.
 | 3 | `Unauthorized` | Fee | Caller is not authorized. |
 | 4 | `InvalidAmount` | Fee | Provided amount is invalid (zero or negative). |
 | 5 | `Overflow` | Fee | Arithmetic overflow occurred. |
-| 6 | `FeeTooHigh` | Fee | Fee rate exceeds maximum allowed basis noints. |
+| 6 | `FeeTooHigh` | Fee | Fee rate exceeds maximum allowed basis points. |
 | 7 | `InsufficientBalance` | Fee | Insufficient balance to satisfy the request. |
 | 8 | `InvalidRecipient` | Fee | Recipient address is invalid (contract itself or zero address). |
 
